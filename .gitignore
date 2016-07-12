@@ -1,5 +1,6 @@
 *.swp
 
+/Configfile.local
 /Makefile
 /bin
 /check
