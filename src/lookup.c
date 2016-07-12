@@ -45,7 +45,7 @@ int main(int argc, char **argv)
 
   config_string[config_string_used] = '\0';
 
-  found = find_in_config_string(config_string, argv[1]);
+  found = amf_lookup(config_string, argv[1]);
   if (found == NULL)
     return 1;
 

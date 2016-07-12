@@ -3,7 +3,37 @@
 #ifndef AMF_H
 #define AMF_H
 
-static __inline__ int isspace(int c)
+/* libamf has one single public function: amf_lookup(config_string, path).
+ * "config_string" is an AMF-formatted string, and "path" is the path to look
+ * up in the AMF string.  The return value is a pointer into the original AMF
+ * string that points to the start of the value that cooresponds to the given
+ * path.  You can determine the end of this value by looking for a ';'
+ * character.  Paths are seperated by a slash.  For example, given the
+ * following AMF string:
+ *   parentA {
+ *     childA 0x1;
+ *     childB 0x2;
+ *   }
+ *   parentB {
+ *     childA 0x3;
+ *     childB 0x4;
+ *   }
+ * amf_lookup(s, "parentA/childA") returns "0x1;\n "...
+ * amf_lookup(s, "parentA/childB") returns "0x2;\n "...
+ * amf_lookup(s, "parentB/childB") returns "0x3;\n "...
+ * amf_lookup(s, "parentB/childB") returns "0x4;\n "...
+ */
+static __inline__
+const char *amf_lookup(const char *amf_string, const char *path);
+
+/* Everything below here is part of the AMF implementation.  For ease of use,
+ * this is all stored in a single header file. */
+
+/* A simple implementation of the C "isspace()" function.  This doesn't exist
+ * in stand-alone environments, so I just went ahead and implemented it here
+ * because it's simple. */
+static __inline__
+int _amf__isspace(int c)
 {
   if (c == ' ')  return 1;
   if (c == '\t') return 1;
@@ -12,7 +42,10 @@ static __inline__ int isspace(int c)
   return 0;
 }
 
-const char *advance_until_slash(const char *path)
+/* Searches for the next "/" character in the given string, returning a pointer
+ * to the character after that. */
+static __inline__
+const char *_amf__advance_until_slash(const char *path)
 {
   while ((*path != '\0') && (*path != '/'))
     path++;
@@ -22,7 +55,10 @@ const char *advance_until_slash(const char *path)
   return path;
 }
 
-const char *advance_until_entered(const char *config_string)
+/* Moves past the header of an AMF block (the part that looks like "parent {").
+ * This returns a pointer to the character after the opening "{". */
+static __inline__
+const char *_amf__advance_until_entered(const char *config_string)
 {
   while ((*config_string != '\0') && (*config_string != '{'))
     config_string++;
@@ -33,10 +69,13 @@ const char *advance_until_entered(const char *config_string)
   return config_string;
 }
 
-const char *advance_until_over(const char *config_string)
+/* Moves past a whole AMF block, returning a pointer to the character after the
+ * closing "}". */
+static __inline__
+const char *_amf__advance_until_over(const char *config_string)
 {
   int open;
-  config_string = advance_until_entered(config_string);
+  config_string = _amf__advance_until_entered(config_string);
   open = 1;
   while ((*config_string != '\0') && (open > 0)) {
     if (*config_string == '{') open++;
@@ -49,9 +88,13 @@ const char *advance_until_over(const char *config_string)
   return config_string;
 }
 
-int compare_until_slash(const char *config_string, const char *path)
+/* Like strcmp, but stops at a '/' character in the "path" string.  This is
+ * used to compare a path like "parentA/childB" to an AMF string like "parentA
+ * { childA: 1; }", matching the "parentA" section on the first call. */
+static __inline__
+int _amf__compare_until_slash(const char *config_string, const char *path)
 {
-  while (isspace(*config_string)) config_string++;
+  while (_amf__isspace(*config_string)) config_string++;
   while ((*path != '\0') && (*path != '/') && (*config_string != '\0')) {
     if (*path != *config_string)
       return 0;
@@ -59,29 +102,30 @@ int compare_until_slash(const char *config_string, const char *path)
     config_string++;
   }
 
-  if (!isspace(*config_string))
+  if (!_amf__isspace(*config_string))
     return 0;
 
   return 1;
 }
 
-
-const char *find_in_config_string(const char *config_string, const char *path)
+/* The public library function.  See above. */
+static __inline__
+const char *amf_lookup(const char *config_string, const char *path)
 {
   while (*path != '\0' && *config_string != '\0') {
-    if (compare_until_slash(config_string, path)) {
-      path = advance_until_slash(path);
+    if (_amf__compare_until_slash(config_string, path)) {
+      path = _amf__advance_until_slash(path);
       if (*path != '\0')
-        config_string = advance_until_entered(config_string);
+        config_string = _amf__advance_until_entered(config_string);
     } else {
-      config_string = advance_until_over(config_string);
+      config_string = _amf__advance_until_over(config_string);
     }
   }
 
   /* Remove any whitespace from the config string, then strip off the key. */
-  while (*config_string != '\0' &&  isspace(*config_string)) config_string++;
-  while (*config_string != '\0' && !isspace(*config_string)) config_string++;
-  while (*config_string != '\0' &&  isspace(*config_string)) config_string++;
+  while (*config_string != '\0' &&  _amf__isspace(*config_string)) config_string++;
+  while (*config_string != '\0' && !_amf__isspace(*config_string)) config_string++;
+  while (*config_string != '\0' &&  _amf__isspace(*config_string)) config_string++;
 
   return config_string;
 }

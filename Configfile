@@ -5,8 +5,16 @@ COMPILEOPTS += -Wextra
 COMPILEOPTS += -pedantic
 COMPILEOPTS += -Werror
 
+LANGUAGES   += h
+
 LANGUAGES   += bash
 
+# This is probably what you want to use: the libamf header file.
+HEADERS     += amf.h
+SOURCES     += amf.h
+
+# A simple command-line program that parses AMF strings, which is also used to
+# test libamf.
 BINARIES    += amf-lookup
 SOURCES     += lookup.c
 TESTSRC     += smiexample-addr.bash
