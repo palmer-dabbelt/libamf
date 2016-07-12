@@ -29,6 +29,13 @@ const char *amf_lookup(const char *amf_string, const char *path);
 /* Everything below here is part of the AMF implementation.  For ease of use,
  * this is all stored in a single header file. */
 
+/* When in debug mode, we need printf. */
+#ifdef AMF_DEBUG
+struct _IO_FILE;
+extern struct _IO_FILE *stderr;
+int fprintf(struct _IO_FILE *f, const char *format, ...);
+#endif
+
 /* A simple implementation of the C "isspace()" function.  This doesn't exist
  * in stand-alone environments, so I just went ahead and implemented it here
  * because it's simple. */
@@ -113,6 +120,9 @@ static __inline__
 const char *amf_lookup(const char *config_string, const char *path)
 {
   while (*path != '\0' && *config_string != '\0') {
+#ifdef AMF_DEBUG
+    fprintf(stderr, "Looking for '%s' in '%s'\n", path, config_string);
+#endif
     if (_amf__compare_until_slash(config_string, path)) {
       path = _amf__advance_until_slash(path);
       if (*path != '\0')
