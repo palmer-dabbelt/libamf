@@ -77,12 +77,25 @@ const char *_amf__advance_until_entered(const char *config_string)
 }
 
 /* Moves past a whole AMF block, returning a pointer to the character after the
- * closing "}". */
+ * closing "}".  If config_string points to a leaf (so something like "childA
+ * 1; childB 2;"), this will advance just past the first leaf node (so it'll
+ * return "childB 2;"). */
 static __inline__
 const char *_amf__advance_until_over(const char *config_string)
 {
   int open;
-  config_string = _amf__advance_until_entered(config_string);
+
+  while ((*config_string != '\0') && (*config_string != '{') && (*config_string != ';'))
+    config_string++;
+
+  if (*config_string == ';') {
+    config_string++;
+    return config_string;
+  }
+
+  if (*config_string == '{')
+    config_string++;
+
   open = 1;
   while ((*config_string != '\0') && (open > 0)) {
     if (*config_string == '{') open++;
