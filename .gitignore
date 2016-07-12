@@ -1,0 +1,6 @@
+*.swp
+
+/Makefile
+/bin
+/check
+/obj

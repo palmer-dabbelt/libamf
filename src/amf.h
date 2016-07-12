@@ -1,9 +1,9 @@
-// Copyright 2016 Palmer Dabbelt <palmer@dabbelt.com>
+/* Copyright 2016 Palmer Dabbelt <palmer@dabbelt.com> */
 
 #ifndef AMF_H
 #define AMF_H
 
-int isspace(int c)
+static __inline__ int isspace(int c)
 {
   if (c == ' ')  return 1;
   if (c == '\t') return 1;
@@ -35,8 +35,9 @@ const char *advance_until_entered(const char *config_string)
 
 const char *advance_until_over(const char *config_string)
 {
+  int open;
   config_string = advance_until_entered(config_string);
-  int open = 1;
+  open = 1;
   while ((*config_string != '\0') && (open > 0)) {
     if (*config_string == '{') open++;
     if (*config_string == '}') open--;

@@ -1,0 +1,12 @@
+LANGUAGES   += c
+COMPILEOPTS += -ansi
+COMPILEOPTS += -Wall
+COMPILEOPTS += -Wextra
+COMPILEOPTS += -pedantic
+COMPILEOPTS += -Werror
+
+LANGUAGES   += bash
+
+BINARIES    += amf-lookup
+SOURCES     += lookup.c
+TESTSRC     += smiexample-addr.bash
