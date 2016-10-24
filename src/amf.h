@@ -26,6 +26,11 @@
 static __inline__
 const char *amf_lookup(const char *amf_string, const char *path);
 
+/* Returns the number of tiles implied in the given AMF-formatted string,
+ * or -1 if unable to find. */
+static __inline__ 
+int amf_ntiles (const char *amf_string);
+
 /* Everything below here is part of the AMF implementation.  For ease of use,
  * this is all stored in a single header file. */
 
@@ -152,5 +157,42 @@ const char *amf_lookup(const char *config_string, const char *path)
 
   return config_string;
 }
+
+/* Returns the number of tiles implied in the given AMF-formatted string,
+ * or -1 if unable to find. */
+static __inline__
+int amf_ntiles(const char *config_string)
+{
+  int ntiles;
+
+  config_string = amf_lookup(config_string, "core");
+  if (*config_string == '\0')
+    return -1;
+
+  config_string = _amf__advance_until_entered(config_string);
+  if (*config_string == '\0')
+    return -1;
+
+  ntiles = 0;
+  while (*config_string != '\0') {
+    config_string = _amf__advance_until_over(config_string);
+    while (*config_string != '\0' && _amf__isspace(*config_string))
+      config_string++;
+
+#ifdef AMF_DEBUG
+    fprintf(stderr, "Looking for tile '%d', in '%s'\n", ntiles, config_string);
+#endif
+    if (*config_string == '}') {
+      return ++ntiles;
+    } else if (*config_string != '\0') {
+      ntiles++;
+    } else {
+      return ntiles;
+    }
+  }
+
+  return ntiles;
+}
+
 
 #endif
