@@ -21,3 +21,11 @@ SOURCES     += lookup.c
 # The libamf test suite
 TESTSRC     += smiexample-addr.bash
 TESTSRC     += smiexample-size.bash
+
+# A command-line program thar parses AMF strings and uses the libamf API
+# to count the number of tiles, and print that number out.
+BINARIES    += amf-tilecount
+SOURCES     += tilecount.c
+TESTSRC     += single-tile.bash
+TESTSRC     += three-tile.bash
+
